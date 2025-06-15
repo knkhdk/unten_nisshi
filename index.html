@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="スマートフォンに最適化された運転日誌アプリ">
+    <meta name="theme-color" content="#21808D">
+    <title>運転日誌アプリ</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22%E9%81%8B%E8%BB%A2%E6%97%A5%E8%AA%8C%E3%82%A2%E3%83%97%E3%83%AA%22%2C%22short_name%22%3A%22%E9%81%8B%E8%BB%A2%E6%97%A5%E8%AA%8C%22%2C%22description%22%3A%22%E3%82%B9%E3%83%9E%E3%83%BC%E3%83%88%E3%83%95%E3%82%A9%E3%83%B3%E3%81%AB%E6%9C%80%E9%81%A9%E5%8C%96%E3%81%95%E3%82%8C%E3%81%9F%E9%81%8B%E8%BB%A2%E6%97%A5%E8%AA%8C%E3%82%A2%E3%83%97%E3%83%AA%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23FCFCF9%22%2C%22theme_color%22%3A%22%2321808D%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Bcharset%3Dutf-8%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520width%253D%2527192%2527%2520height%253D%2527192%2527%2520viewBox%253D%25270%25200%252024%252024%2527%2520fill%253D%2527none%2527%2520stroke%253D%2527%252321808D%2527%2520stroke-width%253D%25272%2527%2520stroke-linecap%253D%2527round%2527%2520stroke-linejoin%253D%2527round%2527%253E%253Crect%2520x%253D%25273%2527%2520y%253D%25273%2527%2520width%253D%252718%2527%2520height%253D%252718%2527%2520rx%253D%25272%2527%2520ry%253D%25272%2527%252F%253E%253Cline%2520x1%253D%25279%2527%2520y1%253D%25279%2527%2520x2%253D%252715%2527%2520y2%253D%252715%2527%252F%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    
+    <!-- Apple specific meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="運転日誌">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>運転日誌</h1>
+            <p class="app-subtitle">スマートフォン最適化版</p>
+        </header>
+
+        <!-- Input Form -->
+        <section class="input-section">
+            <div class="card">
+                <div class="card__body">
+                    <h2>新しい記録を追加</h2>
+                    
+                    <form id="drivingForm" class="driving-form">
+                        <div class="form-group">
+                            <label for="mileage" class="form-label">走行距離 (km)</label>
+                            <input 
+                                type="number" 
+                                id="mileage" 
+                                class="form-control mobile-input" 
+                                placeholder="例: 12345"
+                                required
+                                min="0"
+                                step="0.1"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="destination" class="form-label">移動先</label>
+                            <input 
+                                type="text" 
+                                id="destination" 
+                                class="form-control mobile-input" 
+                                placeholder="例: 東京駅"
+                                required
+                            >
+                        </div>
+                        
+                        <button type="submit" class="btn btn--primary btn--full-width mobile-btn">
+                            記録を保存
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter Section -->
+        <section class="filter-section">
+            <div class="card">
+                <div class="card__body">
+                    <div class="filter-controls flex items-center gap-8">
+                        <label for="monthFilter" class="form-label m-0">月別フィルター:</label>
+                        <select id="monthFilter" class="form-control filter-select">
+                            <option value="">すべての月</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Records List -->
+        <section class="records-section">
+            <div class="card">
+                <div class="card__body">
+                    <div class="flex items-center justify-between mb-16">
+                        <h2>運転記録</h2>
+                        <span id="recordCount" class="status status--info">0件</span>
+                    </div>
+                    
+                    <div id="recordsList" class="records-list">
+                        <div class="empty-state">
+                            <p>まだ記録がありません。<br>上のフォームから新しい記録を追加してください。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Mobile-friendly toast notifications -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
