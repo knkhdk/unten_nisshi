@@ -9,92 +9,120 @@
 <body>
     <div class="container">
         <header class="py-16">
-            <h1 class="text-center">運転日誌</h1>
+            <h1>運転日誌</h1>
+            <p class="text-secondary">アルコールチェック・給油記録対応版</p>
         </header>
 
         <main>
             <!-- 入力フォーム -->
             <section class="card mb-24">
+                <div class="card__header">
+                    <h2>新しい記録を追加</h2>
+                    <div class="status-indicator">
+                        <span id="record-count">記録件数: 0件</span>
+                    </div>
+                </div>
                 <div class="card__body">
-                    <form id="logForm" class="flex flex-col gap-16">
+                    <form id="driving-form" class="form">
                         <div class="form-group">
-                            <label for="mileage" class="form-label">
-                                走行距離 (km)
-                                <span id="mileageRequiredIndicator" class="required-indicator">*</span>
+                            <label for="distance" class="form-label">
+                                走行距離 (km) <span id="distance-required" class="required-indicator">(必須)</span>
                             </label>
-                            <input 
-                                type="number" 
-                                id="mileage" 
-                                class="form-control"
-                                placeholder="走行距離を入力してください"
-                                step="0.1"
-                                min="0"
-                            >
+                            <input type="number" id="distance" class="form-control" 
+                                   placeholder="例: 12345" step="0.1" min="0">
+                            <div class="field-note" id="distance-note">同一日の1回目のため必須です</div>
                         </div>
+
                         <div class="form-group">
                             <label for="destination" class="form-label">
-                                移動先 <span class="required-indicator">*</span>
+                                移動先 <span class="required-indicator">(必須)</span>
                             </label>
-                            <input 
-                                type="text" 
-                                id="destination" 
-                                class="form-control"
-                                placeholder="移動先を入力してください"
-                                required
-                            >
+                            <input type="text" id="destination" class="form-control" 
+                                   placeholder="例: 現場事務所（川口市）" required>
                         </div>
-                        <button type="submit" class="btn btn--primary btn--full-width">
-                            記録追加
-                        </button>
+
+                        <div class="form-group">
+                            <label for="datetime" class="form-label">
+                                日時 <span class="optional-indicator">(入力不要)</span>
+                            </label>
+                            <input type="datetime-local" id="datetime" class="form-control">
+                            <div class="field-note">自動設定されます（編集可能）</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alcohol-check" class="form-label">
+                                アルコールチェック (mg) <span id="alcohol-required" class="required-indicator">(必須)</span>
+                            </label>
+                            <input type="number" id="alcohol-check" class="form-control" 
+                                   placeholder="0.00" step="0.01" min="0" value="0.00">
+                            <div class="field-note" id="alcohol-note">同一日の1回目のため必須です</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fuel-record" class="form-label">
+                                給油記録 (L) <span class="optional-indicator">(任意)</span>
+                            </label>
+                            <input type="number" id="fuel-record" class="form-control" 
+                                   placeholder="例: 25.5（給油なしの場合は空欄）" step="0.1" min="0">
+                            <div class="field-note">給油しない日は空欄で構いません</div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn--primary btn--full-width">
+                                記録を追加
+                            </button>
+                        </div>
                     </form>
                 </div>
             </section>
 
-            <!-- データ管理ボタン群 -->
-            <section class="card mb-24">
-                <div class="card__body">
-                    <div class="data-management-buttons">
-                        <button id="exportBtn" class="btn btn--secondary">
-                            データエクスポート
-                        </button>
-                        <button id="importBtn" class="btn btn--secondary">
-                            データインポート
-                        </button>
-                        <button id="clearBtn" class="btn btn--outline">
-                            データクリア
-                        </button>
-                        <div class="record-count">
-                            記録件数: <span id="recordCount">0</span>件
-                        </div>
+            <!-- フィルタとアクション -->
+            <section class="controls-section mb-16">
+                <div class="controls-grid">
+                    <div class="filter-group">
+                        <label for="month-filter" class="form-label">月別フィルタ</label>
+                        <select id="month-filter" class="form-control">
+                            <option value="">全ての月</option>
+                        </select>
                     </div>
-                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                    <div class="action-buttons">
+                        <button id="export-btn" class="btn btn--secondary">エクスポート</button>
+                        <button id="import-btn" class="btn btn--secondary">インポート</button>
+                        <button id="clear-btn" class="btn btn--outline">データクリア</button>
+                    </div>
                 </div>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
             </section>
 
-            <!-- メッセージ表示エリア -->
-            <div id="messageArea" class="message-area hidden"></div>
-
-            <!-- 記録表示エリア -->
-            <section id="recordsSection">
-                <h2 class="mb-16">記録一覧</h2>
-                <div id="recordsList" class="records-list">
-                    <div class="no-records">
-                        まだ記録がありません。上のフォームから記録を追加してください。
+            <!-- 記録一覧 -->
+            <section id="records-section">
+                <h2>記録一覧</h2>
+                <div id="records-container" class="records-container">
+                    <div class="empty-state">
+                        <p>記録がありません</p>
+                        <p class="text-secondary">上記のフォームから新しい記録を追加してください。</p>
                     </div>
                 </div>
             </section>
         </main>
-    </div>
 
-    <!-- 確認ダイアログ -->
-    <div id="confirmDialog" class="modal hidden">
-        <div class="modal-content">
-            <h3>確認</h3>
-            <p id="confirmMessage">この操作を実行しますか？</p>
-            <div class="modal-buttons">
-                <button id="confirmYes" class="btn btn--primary">はい</button>
-                <button id="confirmNo" class="btn btn--outline">いいえ</button>
+        <!-- HTML5 Dialog 確認ダイアログ -->
+        <dialog id="confirm-dialog" class="dialog">
+            <div class="dialog__header">
+                <h3 id="dialog-title">確認</h3>
             </div>
+            <div class="dialog__body">
+                <p id="dialog-message">この操作を実行しますか？</p>
+            </div>
+            <div class="dialog__footer">
+                <button id="dialog-cancel" class="btn btn--secondary">キャンセル</button>
+                <button id="dialog-confirm" class="btn btn--primary">実行</button>
+            </div>
+        </dialog>
+
+        <!-- 通知 -->
+        <div id="notification" class="notification hidden">
+            <span id="notification-message"></span>
         </div>
     </div>
 

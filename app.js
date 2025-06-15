@@ -1,431 +1,499 @@
-// 運転日誌アプリケーション
+// 運転日誌アプリケーション - HTML5 Dialog対応版
 class DrivingLogApp {
     constructor() {
         this.records = [];
+        this.currentId = 1;
         this.confirmCallback = null;
         this.init();
     }
 
     init() {
         this.bindEvents();
-        this.loadData();
-        this.updateUI();
+        this.setCurrentDateTime();
+        this.loadSampleData();
+        this.updateRecordCount();
+        this.updateMonthFilter();
+        this.displayRecords();
+        this.checkSameDayRecords();
+    }
+
+    loadSampleData() {
+        const sampleRecords = [
+            {
+                id: 1,
+                datetime: "2025-06-15T09:00",
+                distance: "12000",
+                destination: "川口市役所",
+                alcoholCheck: "0.00",
+                fuelRecord: ""
+            },
+            {
+                id: 2,
+                datetime: "2025-06-15T14:30",
+                distance: "",
+                destination: "現場事務所（さいたま市）",
+                alcoholCheck: "",
+                fuelRecord: "30.5"
+            }
+        ];
+        
+        this.records = sampleRecords;
+        this.currentId = 3;
     }
 
     bindEvents() {
         // フォーム送信
-        document.getElementById('logForm').addEventListener('submit', (e) => {
+        document.getElementById('driving-form').addEventListener('submit', (e) => {
             e.preventDefault();
             this.addRecord();
         });
 
-        // データ管理ボタン
-        document.getElementById('exportBtn').addEventListener('click', () => {
+        // 月別フィルタ
+        document.getElementById('month-filter').addEventListener('change', () => {
+            this.displayRecords();
+        });
+
+        // エクスポート
+        document.getElementById('export-btn').addEventListener('click', () => {
             this.exportData();
         });
 
-        document.getElementById('importBtn').addEventListener('click', () => {
-            document.getElementById('importFile').click();
+        // インポート
+        document.getElementById('import-btn').addEventListener('click', () => {
+            document.getElementById('import-file').click();
         });
 
-        document.getElementById('importFile').addEventListener('change', (e) => {
+        document.getElementById('import-file').addEventListener('change', (e) => {
             if (e.target.files[0]) {
                 this.importData(e.target.files[0]);
             }
+            e.target.value = ''; // Reset file input
         });
 
-        document.getElementById('clearBtn').addEventListener('click', () => {
-            this.showConfirmDialog('すべての記録を削除しますか？この操作は取り消せません。', () => {
-                this.clearAllData();
-            });
+        // データクリア
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            this.showConfirmDialog(
+                'データクリア確認',
+                '全ての記録を削除しますか？この操作は取り消せません。',
+                () => this.clearAllData()
+            );
         });
 
-        // 確認ダイアログ
-        document.getElementById('confirmYes').addEventListener('click', () => {
-            this.executeConfirmAction();
+        // HTML5 ダイアログイベント
+        const dialog = document.getElementById('confirm-dialog');
+        
+        document.getElementById('dialog-cancel').addEventListener('click', () => {
+            this.hideConfirmDialog();
         });
 
-        document.getElementById('confirmNo').addEventListener('click', () => {
-            this.cancelConfirmAction();
+        document.getElementById('dialog-confirm').addEventListener('click', () => {
+            if (this.confirmCallback) {
+                this.confirmCallback();
+            }
+            this.hideConfirmDialog();
         });
 
-        // モーダル背景クリックで閉じる
-        document.getElementById('confirmDialog').addEventListener('click', (e) => {
-            if (e.target.id === 'confirmDialog') {
-                this.cancelConfirmAction();
+        // ESCキーでダイアログを閉じる（HTML5 dialogのデフォルト動作）
+        dialog.addEventListener('cancel', (e) => {
+            this.confirmCallback = null;
+        });
+
+        // ダイアログの外側クリックで閉じる
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                this.hideConfirmDialog();
             }
         });
 
-        // 移動先入力時の走行距離要件チェック
-        document.getElementById('destination').addEventListener('input', () => {
-            this.updateMileageRequirement();
+        // 日時変更時の同一日チェック
+        document.getElementById('datetime').addEventListener('change', () => {
+            this.checkSameDayRecords();
         });
     }
 
-    // 確認アクション実行
-    executeConfirmAction() {
-        this.hideConfirmDialog();
-        if (this.confirmCallback) {
-            try {
-                this.confirmCallback();
-            } catch (error) {
-                console.error('確認アクション実行エラー:', error);
-                this.showMessage('操作の実行中にエラーが発生しました', 'error');
-            }
-            this.confirmCallback = null;
+    setCurrentDateTime() {
+        const now = new Date();
+        const dateTimeString = now.toISOString().slice(0, 16);
+        document.getElementById('datetime').value = dateTimeString;
+    }
+
+    checkSameDayRecords() {
+        const currentDateTime = document.getElementById('datetime').value;
+        if (!currentDateTime) return;
+
+        const currentDate = currentDateTime.split('T')[0];
+        const sameDayRecords = this.records.filter(record => {
+            const recordDate = record.datetime.split('T')[0];
+            return recordDate === currentDate;
+        });
+
+        const isFirstRecord = sameDayRecords.length === 0;
+        
+        // 走行距離フィールドの設定
+        const distanceField = document.getElementById('distance');
+        const distanceRequired = document.getElementById('distance-required');
+        const distanceNote = document.getElementById('distance-note');
+        
+        if (isFirstRecord) {
+            distanceField.required = true;
+            distanceRequired.textContent = '(必須)';
+            distanceRequired.className = 'required-indicator';
+            distanceNote.textContent = '同一日の1回目のため必須です';
+        } else {
+            distanceField.required = false;
+            distanceRequired.textContent = '(任意)';
+            distanceRequired.className = 'optional-indicator';
+            distanceNote.textContent = '同一日の2回目以降は任意です';
+        }
+
+        // アルコールチェックフィールドの設定
+        const alcoholField = document.getElementById('alcohol-check');
+        const alcoholRequired = document.getElementById('alcohol-required');
+        const alcoholNote = document.getElementById('alcohol-note');
+        
+        if (isFirstRecord) {
+            alcoholField.required = true;
+            alcoholRequired.textContent = '(必須)';
+            alcoholRequired.className = 'required-indicator';
+            alcoholNote.textContent = '同一日の1回目のため必須です';
+        } else {
+            alcoholField.required = false;
+            alcoholRequired.textContent = '(任意)';
+            alcoholRequired.className = 'optional-indicator';
+            alcoholNote.textContent = '同一日の2回目以降は任意です';
         }
     }
 
-    // 確認アクションキャンセル
-    cancelConfirmAction() {
-        this.hideConfirmDialog();
-        this.confirmCallback = null;
-    }
-
-    // データ読み込み（メモリ上のデータを使用）
-    loadData() {
-        // サンドボックス環境のため、localStorageは使用できません
-        // 代わりにメモリ内でデータを管理します
-        this.records = [];
-    }
-
-    // データ保存（メモリ上のデータを更新）
-    saveData() {
-        // localStorageの代わりにメモリに保存
-        // 実際の実装では localStorage.setItem('drivingLogRecords', JSON.stringify(this.records)) を使用
-        console.log('データ保存:', this.records.length, '件');
-    }
-
-    // 記録追加
     addRecord() {
-        const mileageInput = document.getElementById('mileage');
-        const destinationInput = document.getElementById('destination');
-        
-        const mileage = mileageInput.value.trim();
-        const destination = destinationInput.value.trim();
+        const record = {
+            id: this.currentId++,
+            datetime: document.getElementById('datetime').value,
+            distance: document.getElementById('distance').value.trim(),
+            destination: document.getElementById('destination').value.trim(),
+            alcoholCheck: document.getElementById('alcohol-check').value.trim(),
+            fuelRecord: document.getElementById('fuel-record').value.trim()
+        };
 
         // バリデーション
-        if (!destination) {
-            this.showMessage('移動先を入力してください', 'error');
-            destinationInput.focus();
+        if (!this.validateRecord(record)) {
             return;
         }
 
-        const today = this.formatDate(new Date());
-        const isMileageRequired = this.isMileageRequiredForDate(today);
-
-        if (isMileageRequired && !mileage) {
-            this.showMessage('今日の初回記録では走行距離が必要です', 'error');
-            mileageInput.focus();
-            return;
-        }
-
-        // 記録作成
-        const record = {
-            id: this.generateId(),
-            date: today,
-            time: this.formatTime(new Date()),
-            mileage: mileage || '',
-            destination: destination
-        };
-
-        this.records.unshift(record); // 新しい記録を先頭に追加
-        this.saveData();
-        this.updateUI();
-        this.clearForm();
-        this.showMessage('記録を追加しました', 'success');
-    }
-
-    // 記録削除
-    deleteRecord(id) {
-        this.showConfirmDialog('この記録を削除しますか？', () => {
-            this.records = this.records.filter(record => record.id !== id);
-            this.saveData();
-            this.updateUI();
-            this.showMessage('記録を削除しました', 'success');
-        });
-    }
-
-    // 走行距離の必須要件チェック
-    isMileageRequiredForDate(date) {
-        return !this.records.some(record => record.date === date);
-    }
-
-    // 走行距離要件UI更新
-    updateMileageRequirement() {
-        const today = this.formatDate(new Date());
-        const isRequired = this.isMileageRequiredForDate(today);
-        const mileageInput = document.getElementById('mileage');
-        const indicator = document.getElementById('mileageRequiredIndicator');
+        this.records.push(record);
+        this.records.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
         
-        if (isRequired) {
-            mileageInput.required = true;
-            mileageInput.placeholder = '走行距離を入力してください（必須）';
-            indicator.style.display = 'inline';
-        } else {
-            mileageInput.required = false;
-            mileageInput.placeholder = '走行距離を入力してください（任意）';
-            indicator.style.display = 'none';
-        }
-    }
-
-    // データエクスポート
-    exportData() {
-        if (this.records.length === 0) {
-            this.showMessage('エクスポートするデータがありません', 'info');
-            return;
-        }
-
-        try {
-            const dataStr = JSON.stringify(this.records, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
-            
-            // ダウンロードリンクを作成
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.style.display = 'none';
-            link.href = url;
-            link.download = `運転日誌_${this.formatDate(new Date())}.json`;
-            
-            // DOMに追加してクリック
-            document.body.appendChild(link);
-            link.click();
-            
-            // クリーンアップ
-            setTimeout(() => {
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            }, 100);
-            
-            this.showMessage(`${this.records.length}件の記録をエクスポートしました`, 'success');
-        } catch (error) {
-            console.error('エクスポートエラー:', error);
-            this.showMessage('エクスポート中にエラーが発生しました', 'error');
-        }
-    }
-
-    // データインポート
-    importData(file) {
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const importedData = JSON.parse(e.target.result);
-                
-                if (!Array.isArray(importedData)) {
-                    throw new Error('無効なデータ形式です');
-                }
-
-                // データバリデーション
-                const validRecords = importedData.filter(record => {
-                    return record && 
-                           typeof record.id === 'string' && 
-                           typeof record.date === 'string' && 
-                           typeof record.destination === 'string' &&
-                           record.id.length > 0 &&
-                           record.date.length > 0 &&
-                           record.destination.length > 0;
-                });
-
-                if (validRecords.length === 0) {
-                    throw new Error('有効な記録が見つかりませんでした');
-                }
-
-                // データマージ（重複除去）
-                const existingIds = new Set(this.records.map(r => r.id));
-                const newRecords = validRecords.filter(record => !existingIds.has(record.id));
-
-                if (newRecords.length === 0) {
-                    this.showMessage('新しい記録はありませんでした（重複除去済み）', 'info');
-                    return;
-                }
-
-                this.records = [...this.records, ...newRecords];
-                this.records.sort((a, b) => {
-                    if (a.date !== b.date) {
-                        return new Date(b.date) - new Date(a.date);
-                    }
-                    return b.time.localeCompare(a.time);
-                });
-
-                this.saveData();
-                this.updateUI();
-                this.showMessage(`${newRecords.length}件の記録をインポートしました`, 'success');
-                
-            } catch (error) {
-                console.error('インポートエラー:', error);
-                this.showMessage('ファイルの読み込みに失敗しました: ' + error.message, 'error');
-            }
-        };
-
-        reader.onerror = () => {
-            this.showMessage('ファイルの読み込みエラーが発生しました', 'error');
-        };
-
-        reader.readAsText(file);
-        
-        // ファイル入力をリセット
-        document.getElementById('importFile').value = '';
-    }
-
-    // 全データクリア
-    clearAllData() {
-        this.records = [];
-        this.saveData();
-        this.updateUI();
-        this.showMessage('すべてのデータを削除しました', 'success');
-    }
-
-    // UI更新
-    updateUI() {
         this.updateRecordCount();
-        this.updateRecordsList();
-        this.updateMileageRequirement();
+        this.updateMonthFilter();
+        this.displayRecords();
+        this.resetForm();
+        this.showNotification('記録を追加しました', 'success');
     }
 
-    // 記録件数更新
-    updateRecordCount() {
-        document.getElementById('recordCount').textContent = this.records.length;
+    validateRecord(record) {
+        // 移動先は常に必須
+        if (!record.destination) {
+            this.showNotification('移動先は必須です', 'error');
+            document.getElementById('destination').focus();
+            return false;
+        }
+
+        // 同一日の初回記録チェック
+        const recordDate = record.datetime.split('T')[0];
+        const sameDayRecords = this.records.filter(r => {
+            const rDate = r.datetime.split('T')[0];
+            return rDate === recordDate;
+        });
+
+        const isFirstRecord = sameDayRecords.length === 0;
+
+        if (isFirstRecord) {
+            if (!record.distance) {
+                this.showNotification('同一日の1回目は走行距離が必須です', 'error');
+                document.getElementById('distance').focus();
+                return false;
+            }
+            if (!record.alcoholCheck) {
+                this.showNotification('同一日の1回目はアルコールチェックが必須です', 'error');
+                document.getElementById('alcohol-check').focus();
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    // 記録リスト更新
-    updateRecordsList() {
-        const recordsList = document.getElementById('recordsList');
+    resetForm() {
+        document.getElementById('driving-form').reset();
+        document.getElementById('alcohol-check').value = '0.00';
+        this.setCurrentDateTime();
+        this.checkSameDayRecords();
+    }
+
+    displayRecords() {
+        const container = document.getElementById('records-container');
+        const monthFilter = document.getElementById('month-filter').value;
         
-        if (this.records.length === 0) {
-            recordsList.innerHTML = '<div class="no-records">まだ記録がありません。上のフォームから記録を追加してください。</div>';
+        let filteredRecords = this.records;
+        if (monthFilter) {
+            filteredRecords = this.records.filter(record => {
+                const recordMonth = record.datetime.substring(0, 7);
+                return recordMonth === monthFilter;
+            });
+        }
+
+        if (filteredRecords.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <p>記録がありません</p>
+                    <p class="text-secondary">上記のフォームから新しい記録を追加してください。</p>
+                </div>
+            `;
             return;
         }
 
         // 日付別にグループ化
-        const groupedRecords = this.groupRecordsByDate();
+        const groupedRecords = this.groupRecordsByDate(filteredRecords);
         
-        recordsList.innerHTML = '';
-        
-        Object.keys(groupedRecords).forEach(date => {
-            const dayGroup = document.createElement('div');
-            dayGroup.className = 'day-group';
-            
-            const records = groupedRecords[date];
-            const totalMileage = records.reduce((sum, record) => {
-                return sum + (parseFloat(record.mileage) || 0);
-            }, 0);
-            
-            dayGroup.innerHTML = `
-                <div class="day-header">
-                    <div>${this.formatDateDisplay(date)}</div>
-                    <div class="day-summary">
-                        ${records.length}件の記録 / 合計走行距離: ${totalMileage.toFixed(1)}km
-                    </div>
-                </div>
-                ${records.map(record => this.createRecordHTML(record)).join('')}
-            `;
-            
-            recordsList.appendChild(dayGroup);
+        container.innerHTML = '';
+        Object.keys(groupedRecords).sort().reverse().forEach(date => {
+            const dateCard = this.createDateCard(date, groupedRecords[date]);
+            container.appendChild(dateCard);
         });
     }
 
-    // 日付別グループ化
-    groupRecordsByDate() {
-        const grouped = {};
-        this.records.forEach(record => {
-            if (!grouped[record.date]) {
-                grouped[record.date] = [];
+    groupRecordsByDate(records) {
+        return records.reduce((groups, record) => {
+            const date = record.datetime.split('T')[0];
+            if (!groups[date]) {
+                groups[date] = [];
             }
-            grouped[record.date].push(record);
-        });
-        
-        // 各日付内で時間順にソート
-        Object.keys(grouped).forEach(date => {
-            grouped[date].sort((a, b) => b.time.localeCompare(a.time));
-        });
-        
-        return grouped;
+            groups[date].push(record);
+            return groups;
+        }, {});
     }
 
-    // 記録HTML作成
-    createRecordHTML(record) {
-        return `
-            <div class="record-item">
-                <div class="record-time">${record.time}</div>
-                <div class="record-details">
-                    <div class="record-destination">${this.escapeHtml(record.destination)}</div>
-                    <div class="record-mileage">
-                        ${record.mileage ? `走行距離: ${record.mileage}km` : '走行距離: 未記録'}
-                    </div>
+    createDateCard(date, records) {
+        const card = document.createElement('div');
+        card.className = 'record-card';
+
+        const formattedDate = this.formatDate(date);
+        
+        card.innerHTML = `
+            <div class="record-card__header">
+                <h3 class="record-card__date">${formattedDate}</h3>
+            </div>
+            <div class="record-card__body">
+                <div class="record-entries">
+                    ${records.map(record => this.createRecordEntry(record)).join('')}
                 </div>
-                <div class="record-actions">
-                    <button class="btn btn--outline btn--xs" onclick="app.deleteRecord('${record.id}')">
-                        削除
-                    </button>
+            </div>
+        `;
+
+        return card;
+    }
+
+    createRecordEntry(record) {
+        const time = record.datetime.split('T')[1];
+        const formattedTime = time ? time.substring(0, 5) : '';
+
+        return `
+            <div class="record-entry">
+                <div class="record-entry__time">${formattedTime}</div>
+                <div class="record-entry__details">
+                    <div class="detail-item">
+                        <div class="detail-item__label">走行距離</div>
+                        <div class="detail-item__value ${!record.distance ? 'empty' : ''}">
+                            ${record.distance || '記録なし'} ${record.distance ? 'km' : ''}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-item__label">移動先</div>
+                        <div class="detail-item__value">${record.destination}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-item__label">アルコールチェック</div>
+                        <div class="detail-item__value ${!record.alcoholCheck ? 'empty' : ''}">
+                            ${record.alcoholCheck || '記録なし'} ${record.alcoholCheck ? 'mg' : ''}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-item__label">給油記録</div>
+                        <div class="detail-item__value ${!record.fuelRecord ? 'empty' : ''}">
+                            ${record.fuelRecord || '給油なし'} ${record.fuelRecord ? 'L' : ''}
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
     }
 
-    // HTML エスケープ
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    formatDate(dateString) {
+        const date = new Date(dateString + 'T00:00:00');
+        const options = { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            weekday: 'short'
+        };
+        return date.toLocaleDateString('ja-JP', options);
     }
 
-    // フォームクリア
-    clearForm() {
-        document.getElementById('mileage').value = '';
-        document.getElementById('destination').value = '';
+    updateRecordCount() {
+        document.getElementById('record-count').textContent = `記録件数: ${this.records.length}件`;
     }
 
-    // メッセージ表示
-    showMessage(message, type = 'info') {
-        const messageArea = document.getElementById('messageArea');
-        messageArea.textContent = message;
-        messageArea.className = `message-area ${type}`;
-        messageArea.classList.remove('hidden');
+    updateMonthFilter() {
+        const select = document.getElementById('month-filter');
+        const currentValue = select.value;
         
-        setTimeout(() => {
-            messageArea.classList.add('hidden');
-        }, 4000);
+        // 既存のオプション（最初のオプション以外）を削除
+        while (select.children.length > 1) {
+            select.removeChild(select.lastChild);
+        }
+        
+        const months = [...new Set(this.records.map(record => record.datetime.substring(0, 7)))];
+        months.sort().reverse();
+
+        months.forEach(month => {
+            const option = document.createElement('option');
+            option.value = month;
+            const date = new Date(month + '-01');
+            option.textContent = date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' });
+            select.appendChild(option);
+        });
+        
+        // 前の選択を復元
+        if (currentValue && months.includes(currentValue)) {
+            select.value = currentValue;
+        }
     }
 
-    // 確認ダイアログ表示
-    showConfirmDialog(message, callback) {
-        document.getElementById('confirmMessage').textContent = message;
-        document.getElementById('confirmDialog').classList.remove('hidden');
+    exportData() {
+        if (this.records.length === 0) {
+            this.showNotification('エクスポートする記録がありません', 'warning');
+            return;
+        }
+
+        const dataStr = JSON.stringify(this.records, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `driving-log-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        
+        this.showNotification('データをエクスポートしました', 'success');
+    }
+
+    importData(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedRecords = JSON.parse(e.target.result);
+                
+                if (!Array.isArray(importedRecords)) {
+                    throw new Error('Invalid data format');
+                }
+
+                // データの検証
+                const validRecords = importedRecords.filter(record => {
+                    return record.id && record.datetime && record.destination;
+                });
+
+                if (validRecords.length === 0) {
+                    throw new Error('No valid records found');
+                }
+
+                this.showConfirmDialog(
+                    'データインポート確認',
+                    `${validRecords.length}件の記録をインポートします。現在のデータは上書きされます。よろしいですか？`,
+                    () => {
+                        this.records = validRecords;
+                        this.currentId = Math.max(...this.records.map(r => r.id), 0) + 1;
+                        this.updateRecordCount();
+                        this.updateMonthFilter();
+                        this.displayRecords();
+                        this.checkSameDayRecords();
+                        this.showNotification(`${validRecords.length}件の記録をインポートしました`, 'success');
+                    }
+                );
+            } catch (error) {
+                this.showNotification('データの読み込みに失敗しました。正しいJSONファイルを選択してください。', 'error');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    clearAllData() {
+        this.records = [];
+        this.currentId = 1;
+        
+        // 月別フィルタをリセット
+        const select = document.getElementById('month-filter');
+        select.innerHTML = '<option value="">全ての月</option>';
+        
+        this.updateRecordCount();
+        this.displayRecords();
+        this.checkSameDayRecords();
+        this.showNotification('全てのデータを削除しました', 'success');
+    }
+
+    // HTML5 Dialog を使用した確認ダイアログ
+    showConfirmDialog(title, message, callback) {
+        const dialog = document.getElementById('confirm-dialog');
+        document.getElementById('dialog-title').textContent = title;
+        document.getElementById('dialog-message').textContent = message;
         this.confirmCallback = callback;
-    }
-
-    // 確認ダイアログ非表示
-    hideConfirmDialog() {
-        document.getElementById('confirmDialog').classList.add('hidden');
-    }
-
-    // ユーティリティ関数
-    generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
-
-    formatDate(date) {
-        return date.getFullYear() + '-' + 
-               String(date.getMonth() + 1).padStart(2, '0') + '-' + 
-               String(date.getDate()).padStart(2, '0');
-    }
-
-    formatTime(date) {
-        return String(date.getHours()).padStart(2, '0') + ':' + 
-               String(date.getMinutes()).padStart(2, '0') + ':' + 
-               String(date.getSeconds()).padStart(2, '0');
-    }
-
-    formatDateDisplay(dateStr) {
-        const date = new Date(dateStr);
-        const days = ['日', '月', '火', '水', '木', '金', '土'];
-        const dayOfWeek = days[date.getDay()];
         
-        return `${dateStr} (${dayOfWeek})`;
+        // HTML5 dialog の showModal() を使用
+        dialog.showModal();
+    }
+
+    hideConfirmDialog() {
+        const dialog = document.getElementById('confirm-dialog');
+        dialog.close();
+        this.confirmCallback = null;
+    }
+
+    showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        const messageElement = document.getElementById('notification-message');
+        
+        messageElement.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.classList.remove('hidden');
+
+        setTimeout(() => {
+            notification.classList.add('hidden');
+        }, 4000);
     }
 }
 
+// Object.groupBy のポリフィル（必要に応じて）
+if (!Object.groupBy) {
+    Object.groupBy = function(items, keyFn) {
+        return items.reduce((result, item) => {
+            const key = keyFn(item);
+            if (!result[key]) {
+                result[key] = [];
+            }
+            result[key].push(item);
+            return result;
+        }, {});
+    };
+}
+
 // アプリケーション初期化
-const app = new DrivingLogApp();
+document.addEventListener('DOMContentLoaded', () => {
+    // HTML5 dialog サポートチェック
+    const dialog = document.createElement('dialog');
+    if (typeof dialog.showModal !== 'function') {
+        console.warn('HTML5 dialog not supported. Falling back to custom modal.');
+        // ここで代替実装を行うか、ポリフィルを読み込む
+    }
+    
+    new DrivingLogApp();
+});
