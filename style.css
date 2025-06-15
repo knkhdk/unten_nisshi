@@ -654,341 +654,248 @@ select.form-control {
     format('woff2');
 }
 
-/* Mobile-first responsive design for driving log app */
+/* Custom styles for the driving log app */
 
-/* App-specific styles */
-.app-header {
-  text-align: center;
-  padding: var(--space-24) var(--space-16);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-  color: var(--color-btn-primary-text);
-  margin-bottom: var(--space-24);
+.page-title {
+    text-align: center;
+    margin-bottom: var(--space-32);
+    color: var(--color-text);
 }
 
-.app-header h1 {
-  font-size: var(--font-size-3xl);
-  margin-bottom: var(--space-8);
-  font-weight: var(--font-weight-bold);
+.form-card {
+    margin-bottom: var(--space-24);
 }
 
-.app-subtitle {
-  font-size: var(--font-size-base);
-  opacity: 0.9;
-  margin: 0;
+.field-help {
+    display: block;
+    margin-top: var(--space-4);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
 }
 
-/* Mobile-optimized form styles */
-.input-section {
-  margin-bottom: var(--space-24);
+#required-indicator {
+    font-weight: var(--font-weight-normal);
+    color: var(--color-error);
+    transition: color var(--duration-normal) var(--ease-standard);
 }
 
-.driving-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
+#required-indicator.optional {
+    color: var(--color-text-secondary);
 }
 
-.mobile-input {
-  font-size: 16px; /* Prevents zoom on iOS */
-  min-height: 44px; /* Touch-friendly minimum size */
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-md);
-  border: 2px solid var(--color-border);
-  transition: border-color var(--duration-normal) var(--ease-standard);
-}
-
-.mobile-input:focus {
-  border-color: var(--color-primary);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(33, 128, 141, 0.1);
-}
-
-.mobile-btn {
-  min-height: 48px; /* Larger touch target for mobile */
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  padding: var(--space-12) var(--space-20);
-  border-radius: var(--radius-md);
-  letter-spacing: 0.01em;
-}
-
-.mobile-btn:active {
-  transform: translateY(1px);
-}
-
-/* Filter section */
 .filter-section {
-  margin-bottom: var(--space-24);
-}
-
-.filter-controls {
-  flex-wrap: wrap;
-  gap: var(--space-12);
+    margin-bottom: var(--space-24);
+    padding: var(--space-16);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-card-border);
 }
 
 .filter-select {
-  flex: 1;
-  min-width: 150px;
-  font-size: 16px;
-  min-height: 44px;
+    min-width: 200px;
 }
 
-/* Records list */
 .records-section {
-  margin-bottom: var(--space-32);
+    margin-bottom: var(--space-24);
 }
 
-.records-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
+.date-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-card-border);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-16);
+    overflow: hidden;
+}
+
+.date-card__header {
+    padding: var(--space-16);
+    background-color: var(--color-secondary);
+    border-bottom: 1px solid var(--color-card-border-inner);
+}
+
+.date-header {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    margin: 0;
+}
+
+.total-mileage {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-4);
+}
+
+.date-card__body {
+    padding: 0;
 }
 
 .record-item {
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-16);
-  background: var(--color-surface);
-  border: 1px solid var(--color-card-border);
-  border-radius: var(--radius-base);
-  transition: all var(--duration-normal) var(--ease-standard);
-}
-
-.record-item:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.record-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-8);
-  flex-wrap: wrap;
-  gap: var(--space-8);
-}
-
-.record-id {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
-}
-
-.record-date {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.record-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
-
-.record-detail {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-}
-
-.record-label {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  min-width: 80px;
-}
-
-.record-value {
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-  flex: 1;
-}
-
-.mileage-value {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
-}
-
-.destination-value {
-  font-weight: var(--font-weight-medium);
-}
-
-.delete-btn {
-  background: var(--color-error);
-  color: white;
-  border: none;
-  padding: var(--space-6) var(--space-12);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-standard);
-  margin-top: var(--space-8);
-  align-self: flex-start;
-  min-height: 36px;
-}
-
-.delete-btn:hover {
-  background: rgba(192, 21, 47, 0.9);
-}
-
-.delete-btn:active {
-  transform: translateY(1px);
-}
-
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: var(--space-32) var(--space-16);
-  color: var(--color-text-secondary);
-}
-
-.empty-state p {
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
-}
-
-/* Toast notifications */
-.toast {
-  position: fixed;
-  bottom: var(--space-20);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-success);
-  color: var(--color-btn-primary-text);
-  padding: var(--space-12) var(--space-20);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-  z-index: 1000;
-  transition: all var(--duration-normal) var(--ease-standard);
-  max-width: calc(100vw - var(--space-32));
-  text-align: center;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.toast.hidden {
-  opacity: 0;
-  transform: translateX(-50%) translateY(10px);
-}
-
-.toast.error {
-  background: var(--color-error);
-}
-
-/* Container adjustments for mobile */
-.container {
-  max-width: 100%;
-  padding: 0;
-}
-
-/* Responsive adjustments */
-@media (min-width: 480px) {
-  .container {
-    padding: 0 var(--space-16);
-    max-width: 480px;
-    margin: 0 auto;
-  }
-  
-  .record-details {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-  
-  .record-detail {
-    flex: 1;
-    min-width: 150px;
-  }
-}
-
-@media (min-width: 768px) {
-  .container {
-    max-width: 600px;
-  }
-  
-  .app-header h1 {
-    font-size: var(--font-size-4xl);
-  }
-  
-  .filter-controls {
-    flex-wrap: nowrap;
-  }
-  
-  .record-item {
-    flex-direction: row;
+    padding: var(--space-16);
+    border-bottom: 1px solid var(--color-card-border-inner);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-16);
     align-items: center;
-    justify-content: space-between;
-  }
-  
-  .record-content {
-    flex: 1;
-  }
-  
-  .delete-btn {
-    margin-top: 0;
-    margin-left: var(--space-16);
-  }
 }
 
-/* Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.record-item:last-child {
+    border-bottom: none;
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .mobile-input,
-  .record-item {
-    border-width: 2px;
-  }
+.record-time {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+    min-width: 60px;
 }
 
-/* Safe area adjustments for iOS */
-@supports (padding: max(0px)) {
-  .app-header {
-    padding-top: max(var(--space-24), env(safe-area-inset-top));
-  }
-  
-  .toast {
-    bottom: max(var(--space-20), env(safe-area-inset-bottom));
-  }
+.record-destination {
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+    font-weight: var(--font-weight-medium);
 }
 
-/* Focus styles for better accessibility */
-.mobile-input:focus,
-.filter-select:focus,
-.mobile-btn:focus,
-.delete-btn:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.record-mileage {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    text-align: right;
+    min-width: 80px;
 }
 
-/* Loading state */
-.loading {
-  opacity: 0.6;
-  pointer-events: none;
+.record-mileage.has-value {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
 }
 
-/* Animation for new records */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.no-records {
+    text-align: center;
+    padding: var(--space-32);
+    color: var(--color-text-secondary);
 }
 
-.record-item.new {
-  animation: slideIn var(--duration-normal) var(--ease-standard);
+.no-records p {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+/* Status indicators for form state */
+.form-state-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+    padding: var(--space-6) var(--space-12);
+    border-radius: var(--radius-base);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.form-state-indicator.first-entry {
+    background-color: rgba(var(--color-error-rgb), 0.1);
+    color: var(--color-error);
+    border: 1px solid rgba(var(--color-error-rgb), 0.2);
+}
+
+.form-state-indicator.subsequent-entry {
+    background-color: rgba(var(--color-info-rgb), 0.1);
+    color: var(--color-info);
+    border: 1px solid rgba(var(--color-info-rgb), 0.2);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding-left: var(--space-12);
+        padding-right: var(--space-12);
+    }
+    
+    .page-title {
+        font-size: var(--font-size-3xl);
+        margin-bottom: var(--space-24);
+    }
+    
+    .filter-section {
+        padding: var(--space-12);
+    }
+    
+    .filter-select {
+        min-width: 150px;
+    }
+    
+    .record-item {
+        grid-template-columns: 1fr;
+        gap: var(--space-8);
+        text-align: left;
+    }
+    
+    .record-time {
+        min-width: auto;
+    }
+    
+    .record-mileage {
+        text-align: left;
+        min-width: auto;
+    }
+    
+    .date-card__header {
+        padding: var(--space-12);
+    }
+    
+    .record-item {
+        padding: var(--space-12);
+    }
+}
+
+/* Focus and interaction states */
+.form-control:focus {
+    box-shadow: var(--focus-ring);
+}
+
+.btn:focus-visible {
+    box-shadow: var(--focus-ring);
+}
+
+/* Animation for state changes */
+#mileage {
+    transition: border-color var(--duration-normal) var(--ease-standard);
+}
+
+#mileage.optional {
+    border-color: var(--color-border);
+}
+
+#mileage.required {
+    border-color: var(--color-error);
+}
+
+/* Empty state styling */
+.hidden {
+    display: none;
+}
+
+.show {
+    display: block;
+}
+
+/* Smooth transitions for dynamic content */
+.records-container {
+    transition: opacity var(--duration-normal) var(--ease-standard);
+}
+
+.fade-in {
+    animation: fadeIn var(--duration-normal) var(--ease-standard);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

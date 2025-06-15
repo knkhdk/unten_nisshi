@@ -1,363 +1,299 @@
-// 運転日誌アプリ - スマートフォン最適化版
+// 運転日誌記録アプリケーション
 class DrivingLogApp {
     constructor() {
         this.records = [];
-        this.nextId = 1;
         this.init();
     }
 
     init() {
-        this.bindEvents();
-        this.initializeMonthFilter();
+        this.setupEventListeners();
+        this.updateFormState();
+        this.populateMonthFilter();
         this.renderRecords();
-        this.updateRecordCount();
     }
 
-    bindEvents() {
-        // フォーム送信イベント
-        const form = document.getElementById('drivingForm');
+    setupEventListeners() {
+        const form = document.getElementById('driving-form');
+        const monthFilter = document.getElementById('month-filter');
+
         form.addEventListener('submit', (e) => this.handleFormSubmit(e));
-
-        // 月別フィルターイベント
-        const monthFilter = document.getElementById('monthFilter');
-        monthFilter.addEventListener('change', () => this.handleFilterChange());
-
-        // タッチイベントの最適化
-        this.optimizeTouchEvents();
+        monthFilter.addEventListener('change', () => this.renderRecords());
     }
 
-    optimizeTouchEvents() {
-        // iOS Safari での zoom 防止
-        document.addEventListener('gesturestart', (e) => {
-            e.preventDefault();
+    // 今日の日付を取得（YYYY-MM-DD形式）
+    getTodayDateString() {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    }
+
+    // 指定日付の既存記録をチェック
+    getRecordsForDate(dateString) {
+        return this.records.filter(record => {
+            const recordDate = new Date(record.datetime).toISOString().split('T')[0];
+            return recordDate === dateString;
         });
-
-        // ダブルタップズーム防止
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', (e) => {
-            const now = new Date().getTime();
-            if (now - lastTouchEnd <= 300) {
-                e.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
     }
 
+    // フォームの状態を更新（必須/任意の切り替え）
+    updateFormState() {
+        const todayRecords = this.getRecordsForDate(this.getTodayDateString());
+        const mileageField = document.getElementById('mileage');
+        const requiredIndicator = document.getElementById('required-indicator');
+        const mileageHelp = document.getElementById('mileage-help');
+        const isFirstEntry = todayRecords.length === 0;
+
+        if (isFirstEntry) {
+            // 初回記録の場合
+            mileageField.required = true;
+            mileageField.placeholder = '走行距離をキロメートルで入力';
+            mileageField.classList.add('required');
+            mileageField.classList.remove('optional');
+            
+            requiredIndicator.textContent = '(必須)';
+            requiredIndicator.classList.remove('optional');
+            
+            mileageHelp.textContent = '今日初回の記録は走行距離の入力が必要です';
+        } else {
+            // 2回目以降の記録の場合
+            mileageField.required = false;
+            mileageField.placeholder = '任意：前回の続きなど';
+            mileageField.classList.add('optional');
+            mileageField.classList.remove('required');
+            
+            requiredIndicator.textContent = '(任意)';
+            requiredIndicator.classList.add('optional');
+            
+            mileageHelp.textContent = '2回目以降の記録では走行距離は任意です';
+        }
+    }
+
+    // フォーム送信処理
     handleFormSubmit(e) {
         e.preventDefault();
         
         const mileageInput = document.getElementById('mileage');
         const destinationInput = document.getElementById('destination');
         
-        const mileage = parseFloat(mileageInput.value);
+        const mileage = mileageInput.value ? parseFloat(mileageInput.value) : null;
         const destination = destinationInput.value.trim();
 
-        // バリデーション
-        if (!this.validateInput(mileage, destination)) {
+        // 移動先は常に必須
+        if (!destination) {
+            alert('移動先を入力してください。');
+            return;
+        }
+
+        // 初回記録の場合は走行距離も必須
+        const todayRecords = this.getRecordsForDate(this.getTodayDateString());
+        if (todayRecords.length === 0 && (mileage === null || mileage === undefined)) {
+            alert('今日初回の記録では走行距離の入力が必要です。');
             return;
         }
 
         // 新しい記録を作成
-        const record = {
-            id: this.nextId++,
-            date: new Date(),
+        const newRecord = {
+            id: this.generateId(),
+            datetime: new Date(),
             mileage: mileage,
             destination: destination
         };
 
         // 記録を追加
-        this.records.unshift(record); // 新しい記録を先頭に追加
-        
+        this.records.push(newRecord);
+
         // フォームをリセット
         mileageInput.value = '';
         destinationInput.value = '';
-        
+
         // UIを更新
+        this.updateFormState();
+        this.populateMonthFilter();
         this.renderRecords();
-        this.updateRecordCount();
-        this.updateMonthFilter();
+
+        // 成功メッセージ（簡易的）
+        const button = e.target.querySelector('button[type="submit"]');
+        const originalText = button.textContent;
+        button.textContent = '記録を追加しました！';
+        button.disabled = true;
         
-        // 成功メッセージを表示
-        this.showToast('記録が保存されました', 'success');
-        
-        // フォームの最初のフィールドにフォーカス
-        mileageInput.focus();
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+        }, 1500);
     }
 
-    validateInput(mileage, destination) {
-        if (isNaN(mileage) || mileage < 0) {
-            this.showToast('正しい走行距離を入力してください', 'error');
-            return false;
-        }
-        
-        if (!destination) {
-            this.showToast('移動先を入力してください', 'error');
-            return false;
-        }
-        
-        return true;
+    // ユニークIDを生成
+    generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
+    // 月別フィルターのオプションを生成
+    populateMonthFilter() {
+        const monthFilter = document.getElementById('month-filter');
+        const currentValue = monthFilter.value;
+        
+        // 既存のオプション（「すべて」以外）をクリア
+        const options = monthFilter.querySelectorAll('option:not([value=""])');
+        options.forEach(option => option.remove());
+
+        // 記録から月を抽出
+        const months = new Set();
+        this.records.forEach(record => {
+            const date = new Date(record.datetime);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            months.add(monthKey);
+        });
+
+        // 月をソートして追加
+        const sortedMonths = Array.from(months).sort().reverse();
+        sortedMonths.forEach(monthKey => {
+            const [year, month] = monthKey.split('-');
+            const option = document.createElement('option');
+            option.value = monthKey;
+            option.textContent = `${year}年${parseInt(month)}月`;
+            monthFilter.appendChild(option);
+        });
+
+        // 前の選択値を復元
+        monthFilter.value = currentValue;
+    }
+
+    // 記録を表示
     renderRecords() {
-        const recordsList = document.getElementById('recordsList');
-        const monthFilter = document.getElementById('monthFilter');
-        const selectedMonth = monthFilter.value;
+        const container = document.getElementById('records-container');
+        const noRecordsDiv = document.getElementById('no-records');
+        const monthFilter = document.getElementById('month-filter');
         
         // フィルタリング
         let filteredRecords = this.records;
-        if (selectedMonth) {
+        if (monthFilter.value) {
+            const [filterYear, filterMonth] = monthFilter.value.split('-');
             filteredRecords = this.records.filter(record => {
-                const recordMonth = this.formatYearMonth(record.date);
-                return recordMonth === selectedMonth;
+                const date = new Date(record.datetime);
+                const recordYear = date.getFullYear().toString();
+                const recordMonth = String(date.getMonth() + 1).padStart(2, '0');
+                return recordYear === filterYear && recordMonth === filterMonth;
             });
         }
-        
-        // 記録がない場合
+
         if (filteredRecords.length === 0) {
-            recordsList.innerHTML = `
-                <div class="empty-state">
-                    <p>${selectedMonth ? 'この月の記録がありません。' : 'まだ記録がありません。'}<br>上のフォームから新しい記録を追加してください。</p>
-                </div>
-            `;
+            container.innerHTML = '';
+            noRecordsDiv.classList.remove('hidden');
             return;
         }
+
+        noRecordsDiv.classList.add('hidden');
+
+        // 日付別にグループ化
+        const groupedRecords = this.groupRecordsByDate(filteredRecords);
         
-        // 記録をレンダリング
-        const recordsHTML = filteredRecords.map(record => this.createRecordHTML(record)).join('');
-        recordsList.innerHTML = recordsHTML;
+        container.innerHTML = '';
         
-        // 削除ボタンのイベントリスナーを追加
-        this.bindDeleteButtons();
+        // 日付の降順でソート
+        const sortedDates = Object.keys(groupedRecords).sort().reverse();
+        
+        sortedDates.forEach(dateKey => {
+            const dateRecords = groupedRecords[dateKey];
+            const dateCard = this.createDateCard(dateKey, dateRecords);
+            container.appendChild(dateCard);
+        });
     }
 
-    createRecordHTML(record) {
+    // 記録を日付別にグループ化
+    groupRecordsByDate(records) {
+        const grouped = {};
+        
+        records.forEach(record => {
+            const date = new Date(record.datetime);
+            const dateKey = date.toISOString().split('T')[0];
+            
+            if (!grouped[dateKey]) {
+                grouped[dateKey] = [];
+            }
+            grouped[dateKey].push(record);
+        });
+
+        // 各日付内で時刻順にソート
+        Object.keys(grouped).forEach(dateKey => {
+            grouped[dateKey].sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+        });
+
+        return grouped;
+    }
+
+    // 日付カードを作成
+    createDateCard(dateKey, records) {
+        const date = new Date(dateKey + 'T00:00:00');
+        const dateCard = document.createElement('div');
+        dateCard.className = 'date-card fade-in';
+
+        // 日付のフォーマット
+        const dateStr = this.formatDate(date);
+        
+        // その日の総走行距離を計算
+        const totalMileage = records.reduce((sum, record) => {
+            return sum + (record.mileage || 0);
+        }, 0);
+
+        dateCard.innerHTML = `
+            <div class="date-card__header">
+                <h3 class="date-header">${dateStr}</h3>
+                ${totalMileage > 0 ? `<div class="total-mileage">総走行距離: ${totalMileage.toFixed(1)}km</div>` : ''}
+            </div>
+            <div class="date-card__body">
+                ${records.map(record => this.createRecordItem(record)).join('')}
+            </div>
+        `;
+
+        return dateCard;
+    }
+
+    // 個別記録アイテムを作成
+    createRecordItem(record) {
+        const time = new Date(record.datetime).toLocaleTimeString('ja-JP', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const mileageDisplay = record.mileage !== null 
+            ? `${record.mileage.toFixed(1)}km`
+            : '記録なし';
+
+        const mileageClass = record.mileage !== null ? 'has-value' : '';
+
         return `
-            <div class="record-item" data-id="${record.id}">
-                <div class="record-content">
-                    <div class="record-header">
-                        <span class="record-id">記録 #${record.id}</span>
-                        <span class="record-date">${this.formatDateTime(record.date)}</span>
-                    </div>
-                    <div class="record-details">
-                        <div class="record-detail">
-                            <span class="record-label">走行距離:</span>
-                            <span class="record-value mileage-value">${record.mileage.toLocaleString()} km</span>
-                        </div>
-                        <div class="record-detail">
-                            <span class="record-label">移動先:</span>
-                            <span class="record-value destination-value">${this.escapeHtml(record.destination)}</span>
-                        </div>
-                    </div>
-                </div>
-                <button class="delete-btn" data-id="${record.id}" aria-label="記録を削除">
-                    削除
-                </button>
+            <div class="record-item">
+                <div class="record-time">${time}</div>
+                <div class="record-destination">${record.destination}</div>
+                <div class="record-mileage ${mileageClass}">${mileageDisplay}</div>
             </div>
         `;
     }
 
-    bindDeleteButtons() {
-        const deleteButtons = document.querySelectorAll('.delete-btn');
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const recordId = parseInt(e.target.dataset.id);
-                this.deleteRecord(recordId);
-            });
-        });
-    }
+    // 日付をフォーマット
+    formatDate(date) {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
 
-    deleteRecord(recordId) {
-        // 確認ダイアログ
-        if (!confirm('この記録を削除しますか？')) {
-            return;
+        const targetDate = new Date(date);
+        
+        if (targetDate.toDateString() === today.toDateString()) {
+            return '今日';
+        } else if (targetDate.toDateString() === yesterday.toDateString()) {
+            return '昨日';
+        } else {
+            const year = targetDate.getFullYear();
+            const month = targetDate.getMonth() + 1;
+            const day = targetDate.getDate();
+            const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][targetDate.getDay()];
+            
+            return `${year}年${month}月${day}日(${dayOfWeek})`;
         }
-        
-        // 記録を削除
-        this.records = this.records.filter(record => record.id !== recordId);
-        
-        // UIを更新
-        this.renderRecords();
-        this.updateRecordCount();
-        this.updateMonthFilter();
-        
-        // 削除メッセージを表示
-        this.showToast('記録が削除されました', 'success');
-    }
-
-    initializeMonthFilter() {
-        this.updateMonthFilter();
-    }
-
-    updateMonthFilter() {
-        const monthFilter = document.getElementById('monthFilter');
-        const currentValue = monthFilter.value;
-        
-        // 月のセットを取得
-        const months = new Set();
-        this.records.forEach(record => {
-            months.add(this.formatYearMonth(record.date));
-        });
-        
-        // ソートされた月のリスト
-        const sortedMonths = Array.from(months).sort().reverse();
-        
-        // オプションを更新
-        const optionsHTML = sortedMonths.map(month => {
-            const [year, monthNum] = month.split('-');
-            const monthName = this.getMonthName(parseInt(monthNum));
-            return `<option value="${month}">${year}年${monthName}</option>`;
-        }).join('');
-        
-        monthFilter.innerHTML = `
-            <option value="">すべての月</option>
-            ${optionsHTML}
-        `;
-        
-        // 以前の選択を復元
-        if (currentValue && sortedMonths.includes(currentValue)) {
-            monthFilter.value = currentValue;
-        }
-    }
-
-    handleFilterChange() {
-        this.renderRecords();
-        this.updateRecordCount();
-    }
-
-    updateRecordCount() {
-        const monthFilter = document.getElementById('monthFilter');
-        const selectedMonth = monthFilter.value;
-        
-        let count = this.records.length;
-        if (selectedMonth) {
-            count = this.records.filter(record => {
-                const recordMonth = this.formatYearMonth(record.date);
-                return recordMonth === selectedMonth;
-            }).length;
-        }
-        
-        const recordCount = document.getElementById('recordCount');
-        recordCount.textContent = `${count}件`;
-        recordCount.className = `status ${count > 0 ? 'status--success' : 'status--info'}`;
-    }
-
-    formatDateTime(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        
-        return `${year}/${month}/${day} ${hours}:${minutes}`;
-    }
-
-    formatYearMonth(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        return `${year}-${month}`;
-    }
-
-    getMonthName(monthNum) {
-        const months = [
-            '1月', '2月', '3月', '4月', '5月', '6月',
-            '7月', '8月', '9月', '10月', '11月', '12月'
-        ];
-        return months[monthNum - 1];
-    }
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `toast ${type}`;
-        
-        // トーストを表示
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 10);
-        
-        // 3秒後に非表示
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 250);
-        }, 3000);
-    }
-
-    // デモデータを追加するメソッド（開発用）
-    addSampleData() {
-        const sampleRecords = [
-            {
-                id: this.nextId++,
-                date: new Date(2024, 11, 15, 9, 30), // 2024年12月15日
-                mileage: 12345.5,
-                destination: '東京駅'
-            },
-            {
-                id: this.nextId++,
-                date: new Date(2024, 11, 10, 14, 20),
-                mileage: 12300.2,
-                destination: '新宿駅'
-            },
-            {
-                id: this.nextId++,
-                date: new Date(2024, 10, 28, 16, 45), // 2024年11月28日
-                mileage: 12250.8,
-                destination: '渋谷センター'
-            }
-        ];
-
-        this.records = sampleRecords;
-        this.renderRecords();
-        this.updateRecordCount();
-        this.updateMonthFilter();
     }
 }
 
-// アプリケーションの初期化
+// アプリケーションを初期化
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new DrivingLogApp();
-    
-    // サンプルデータを追加（デモ用）
-    app.addSampleData();
-    
-    // PWA対応
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
-            console.log('Service Worker registration failed:', err);
-        });
-    }
-    
-    // アプリをグローバルに参照可能にする（デバッグ用）
-    window.drivingApp = app;
+    new DrivingLogApp();
 });
-
-// PWA インストールプロンプト
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // インストールボタンを表示する場合はここで実装
-    console.log('PWA インストール可能');
-});
-
-// オフライン対応の基本設定
-window.addEventListener('online', () => {
-    console.log('オンラインに戻りました');
-});
-
-window.addEventListener('offline', () => {
-    console.log('オフラインになりました');
-});
-
-// バックグラウンド同期対応（将来の拡張用）
-if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
-    console.log('バックグラウンド同期がサポートされています');
-}
