@@ -654,248 +654,282 @@ select.form-control {
     format('woff2');
 }
 
-/* Custom styles for the driving log app */
+/* Additional styles for the driving log application */
 
-.page-title {
-    text-align: center;
-    margin-bottom: var(--space-32);
-    color: var(--color-text);
+/* Typography adjustments */
+.text-center {
+  text-align: center;
 }
 
-.form-card {
-    margin-bottom: var(--space-24);
+h1 {
+  color: var(--color-primary);
+  margin-bottom: var(--space-8);
 }
 
-.field-help {
-    display: block;
-    margin-top: var(--space-4);
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
+h2 {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
 }
 
-#required-indicator {
-    font-weight: var(--font-weight-normal);
-    color: var(--color-error);
-    transition: color var(--duration-normal) var(--ease-standard);
+/* Form styling */
+.required-indicator {
+  color: var(--color-error);
+  font-weight: var(--font-weight-bold);
 }
 
-#required-indicator.optional {
-    color: var(--color-text-secondary);
+.form-control:required {
+  border-left: 3px solid var(--color-primary);
 }
 
-.filter-section {
-    margin-bottom: var(--space-24);
-    padding: var(--space-16);
-    background-color: var(--color-surface);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-card-border);
+.form-control.error {
+  border-color: var(--color-error);
+  background-color: rgba(var(--color-error-rgb), 0.05);
 }
 
-.filter-select {
-    min-width: 200px;
+/* Data management buttons */
+.data-management-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-12);
+  align-items: center;
 }
 
-.records-section {
-    margin-bottom: var(--space-24);
+@media (max-width: 640px) {
+  .data-management-buttons {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+  }
 }
 
-.date-card {
-    background-color: var(--color-surface);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-card-border);
-    box-shadow: var(--shadow-sm);
-    margin-bottom: var(--space-16);
-    overflow: hidden;
+.record-count {
+  grid-column: span 2;
+  text-align: center;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  padding: var(--space-8);
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-base);
 }
 
-.date-card__header {
-    padding: var(--space-16);
-    background-color: var(--color-secondary);
-    border-bottom: 1px solid var(--color-card-border-inner);
-}
-
-.date-header {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-    margin: 0;
-}
-
-.total-mileage {
+@media (max-width: 640px) {
+  .record-count {
+    grid-column: span 2;
     font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    margin-top: var(--space-4);
+  }
 }
 
-.date-card__body {
-    padding: 0;
+/* Message area */
+.message-area {
+  margin-bottom: var(--space-16);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-base);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--duration-normal) var(--ease-standard);
 }
 
-.record-item {
-    padding: var(--space-16);
-    border-bottom: 1px solid var(--color-card-border-inner);
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: var(--space-16);
-    align-items: center;
+.message-area.success {
+  background-color: rgba(var(--color-success-rgb), 0.1);
+  color: var(--color-success);
+  border: 1px solid rgba(var(--color-success-rgb), 0.2);
 }
 
-.record-item:last-child {
-    border-bottom: none;
+.message-area.error {
+  background-color: rgba(var(--color-error-rgb), 0.1);
+  color: var(--color-error);
+  border: 1px solid rgba(var(--color-error-rgb), 0.2);
 }
 
-.record-time {
-    font-family: var(--font-family-mono);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    font-weight: var(--font-weight-medium);
-    min-width: 60px;
+.message-area.info {
+  background-color: rgba(var(--color-info-rgb), 0.1);
+  color: var(--color-info);
+  border: 1px solid rgba(var(--color-info-rgb), 0.2);
 }
 
-.record-destination {
-    font-size: var(--font-size-md);
-    color: var(--color-text);
-    font-weight: var(--font-weight-medium);
-}
-
-.record-mileage {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    text-align: right;
-    min-width: 80px;
-}
-
-.record-mileage.has-value {
-    color: var(--color-primary);
-    font-weight: var(--font-weight-medium);
+/* Records list */
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
 }
 
 .no-records {
-    text-align: center;
-    padding: var(--space-32);
-    color: var(--color-text-secondary);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  padding: var(--space-32);
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-base);
 }
 
-.no-records p {
-    margin: 0;
-    font-size: var(--font-size-lg);
+.day-group {
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-color: var(--color-surface);
 }
 
-/* Status indicators for form state */
-.form-state-indicator {
-    display: inline-flex;
-    align-items: center;
+.day-header {
+  background-color: var(--color-primary);
+  color: var(--color-btn-primary-text);
+  padding: var(--space-12) var(--space-16);
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.day-summary {
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+}
+
+.record-item {
+  padding: var(--space-12) var(--space-16);
+  border-bottom: 1px solid var(--color-card-border-inner);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-time {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background-color: var(--color-secondary);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-sm);
+  min-width: 70px;
+  text-align: center;
+}
+
+.record-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.record-destination {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.record-mileage {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.record-actions {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.btn--xs {
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  min-height: auto;
+}
+
+/* Modal dialog */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--color-surface);
+  padding: var(--space-24);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 400px;
+  width: 90%;
+  margin: var(--space-16);
+}
+
+.modal-content h3 {
+  margin-bottom: var(--space-16);
+  color: var(--color-text);
+}
+
+.modal-content p {
+  margin-bottom: var(--space-20);
+  color: var(--color-text-secondary);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: var(--space-12);
+  justify-content: flex-end;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .record-item {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    text-align: left;
+  }
+  
+  .record-time {
+    justify-self: start;
+    min-width: auto;
+  }
+  
+  .record-actions {
+    justify-self: end;
+  }
+  
+  .day-header {
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--space-4);
-    margin-top: var(--space-8);
-    padding: var(--space-6) var(--space-12);
-    border-radius: var(--radius-base);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
+  }
+  
+  .modal-buttons {
+    flex-direction: column;
+  }
+  
+  .modal-buttons .btn {
+    width: 100%;
+  }
 }
 
-.form-state-indicator.first-entry {
-    background-color: rgba(var(--color-error-rgb), 0.1);
-    color: var(--color-error);
-    border: 1px solid rgba(var(--color-error-rgb), 0.2);
+/* Utility spacing classes */
+.mb-24 {
+  margin-bottom: var(--space-24);
 }
 
-.form-state-indicator.subsequent-entry {
-    background-color: rgba(var(--color-info-rgb), 0.1);
-    color: var(--color-info);
-    border: 1px solid rgba(var(--color-info-rgb), 0.2);
+/* Loading state */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
-    .container {
-        padding-left: var(--space-12);
-        padding-right: var(--space-12);
-    }
-    
-    .page-title {
-        font-size: var(--font-size-3xl);
-        margin-bottom: var(--space-24);
-    }
-    
-    .filter-section {
-        padding: var(--space-12);
-    }
-    
-    .filter-select {
-        min-width: 150px;
-    }
-    
-    .record-item {
-        grid-template-columns: 1fr;
-        gap: var(--space-8);
-        text-align: left;
-    }
-    
-    .record-time {
-        min-width: auto;
-    }
-    
-    .record-mileage {
-        text-align: left;
-        min-width: auto;
-    }
-    
-    .date-card__header {
-        padding: var(--space-12);
-    }
-    
-    .record-item {
-        padding: var(--space-12);
-    }
+/* Animation for new records */
+.record-item.new-record {
+  animation: slideIn 0.3s ease-out;
 }
 
-/* Focus and interaction states */
-.form-control:focus {
-    box-shadow: var(--focus-ring);
-}
-
-.btn:focus-visible {
-    box-shadow: var(--focus-ring);
-}
-
-/* Animation for state changes */
-#mileage {
-    transition: border-color var(--duration-normal) var(--ease-standard);
-}
-
-#mileage.optional {
-    border-color: var(--color-border);
-}
-
-#mileage.required {
-    border-color: var(--color-error);
-}
-
-/* Empty state styling */
-.hidden {
-    display: none;
-}
-
-.show {
-    display: block;
-}
-
-/* Smooth transitions for dynamic content */
-.records-container {
-    transition: opacity var(--duration-normal) var(--ease-standard);
-}
-
-.fade-in {
-    animation: fadeIn var(--duration-normal) var(--ease-standard);
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
